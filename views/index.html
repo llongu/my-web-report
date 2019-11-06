@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script>
+    const observer = new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) {
+        //首次绘制 (FP) 和 首次内容绘制 (FCP)   从文档的 <head> 中移除任何阻塞渲染的脚本或样式表，可以减少首次绘制和首次内容绘制前的等待时间
+        if (entry.name === 'first-paint') {
+          document.querySelector('#fp').innerText = `首次绘制 (FP)时间, ${parseInt(entry.startTime) / 1000} s`
+        }
+        if (entry.name === 'first-contentful-paint') {
+          document.querySelector('#fcp').innerText = `首次内容绘制 (FCP)时间, ${parseInt(entry.startTime) / 1000}  s`
+        }
+        console.log(entry.name);
+        console.log(entry.startTime);
+        console.log(entry.duration);
+        console.log(entry.entryType);
+        console.log(entry.initiatorType);
+        console.log(
+          `~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+        );
+      }
+    });
+    observer.observe({
+      entryTypes: ['paint', 'longtask']
+    });
+  </script>
+  <script src="./javascripts/web-report-default.js"></script>
+  <script>
+    Performance({
+      domain: './api/webreport', //Your API address
+    }, localShow)
+
+    //去掉callback localShow 则上报 Your API address
+    function localShow(data) {
+      console.log(data);
+
+      performance_set(data);
+
+      resource_set(data);
+
+      error_ste(data);
+    }
+
+    function performance_set({ type = false, performance = false }) {
+      if (!performance || type !== 1) return
+
+      const performance_list = document.querySelectorAll('.performance_list li')
+      performance_list.forEach(item => {
+        const p = item.querySelector('p');
+        const text_name = item.querySelector('p').innerText;
+        if (performance.hasOwnProperty(text_name)) {
+          p.innerText = Number(performance[text_name]) / 1000 + ' s'
+        }
+      })
+    }
+
+    function resource_set({ url = '', time = '', type = false, resourceList = false }) {
+      if (!resourceList || !resourceList.length) return
+
+      const source_table = document.querySelector('#source_table')
+      const fragments = document.createDocumentFragment()
+
+      resourceList.forEach(item => {
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+            <td>
+              ${url}
+              </td>
+              <td>
+              ${item.name}
+            </td>
+            <td>
+                ${item.method}
+            </td>
+            <td>
+               ${new Date(time)}
+            </td>
+            <td>
+
+            </td>
+            <td>
+               
+            </td>
+            <td>
+                ${item.nextHopProtocol}
+            </td>
+            <td>
+                ${item.type}
+            </td>
+            <td>
+                ${parseInt(item.decodedBodySize) / 1000 + ' KB'}
+            </td>
+            <td>
+                ${ (parseInt(item.duration) / 1000) + ' s'}
+            </td>
+        `
+
+        fragments.appendChild(tr)
+      })
+      source_table.appendChild(fragments)
+    }
+
+    function error_ste({ url = '', time = '', type = false, errorList = false }) {
+      if (!errorList || !errorList.length) return
+      const code_error_table = document.querySelector('#code_error_table')
+      const source_error_table = document.querySelector('#source_error_table')
+      const request_error_table = document.querySelector('#request_error_table')
+
+      const code_fragments = document.createDocumentFragment()
+      const source_fragments = document.createDocumentFragment()
+      const request_fragments = document.createDocumentFragment()
+
+      errorList.forEach(item => {
+        const tr = document.createElement('tr')
+        // resource，js，ajax，fetch,other
+        if (item.n === 'js') {
+          tr.innerHTML = `
+                  <td>
+                    ${item.data.resourceUrl}
+                    </td>
+                    <td>
+                    ${item.data.line}
+                  </td>
+                  <td>
+                      ${item.data.col}
+                  </td>
+                  <td>
+                    ${item.n}
+                  </td>
+                  <td>
+                      ${item.msg}
+                  </td>
+                  <td>
+                      ${new Date(item.t)}
+                  </td>
+              `
+
+          code_fragments.appendChild(tr)
+        } else if (item.n === 'resource') {
+          tr.innerHTML = `
+                  <td>
+                    ${item.data.resourceUrl}
+                    </td>
+                    <td>
+                    ${item.data.target}
+                  </td>
+                  <td>
+                      ${item.n}
+                  </td>
+                  <td>
+                      ${item.msg}
+                  </td>
+                  <td>
+                    ${new Date(item.t)}
+                  </td>
+              `
+          source_fragments.appendChild(tr)
+        } else if (item.n === 'ajax' || item.n === 'fetch') {
+          tr.innerHTML = `
+                  <td>
+                    ${item.data.resourceUrl}
+                    </td>
+                    <td>
+                    ${item.data.status}
+                  </td>
+                  <td>
+                      ${item.method}
+                  </td>
+                  <td>
+                      ${item.n}
+                  </td>
+                  <td>
+                      ${item.msg}
+                  </td>
+                  <td>
+                    ${new Date(item.t)}
+                  </td>
+              `
+          request_fragments.appendChild(tr)
+        } else {
+          alert('other error')
+        }
+      })
+      // 
+      if (code_fragments.childElementCount) code_error_table.appendChild(code_fragments)
+      if (source_fragments.childElementCount) source_error_table.appendChild(source_fragments)
+      if (request_fragments.childElementCount) request_error_table.appendChild(request_fragments)
+    }
+
+  </script>
+  <style>
+    li {
+      list-style: none;
+    }
+
+    .list {
+      overflow: hidden;
+    }
+
+    .list li {
+      width: 33.3%;
+      float: left;
+    }
+
+    .list li p {
+      color: #fb3434;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="localShowBox">
+    <h3>页面性能列表</h3>
+    <ul>
+      <span id='fp'>首次绘制时间：</span>
+      <span id="fcp">首次内容绘制时间：</span>
+    </ul>
+    <ul class="list performance_list">
+      <li>
+        页面准备耗时:
+        <p>radt</p>
+      </li>
+      <li>
+        重定向耗时:
+        <p>rdit</p>
+      </li>
+      <li>
+        DNS解析耗时:
+        <p>dnst</p>
+      </li>
+      <li>
+        TCP连接耗时:
+        <p>tcpt</p>
+      </li>
+      <li>
+        白屏耗时:
+        <p>wit</p>
+      </li>
+      <li>
+        请求耗时:
+        <p>reqt</p>
+      </li>
+      <li>
+        unload耗时:
+        <p>uodt</p>
+      </li>
+      <li>
+        DOM渲染耗时:
+        <p>domt</p>
+      </li>
+      <li>
+        解析DOM耗时:
+        <p>andt</p>
+      </li>
+      <li>
+        页面onload耗时:
+        <p>lodt</p>
+      </li>
+    </ul>
+
+    <hr>
+
+    <h3>页面资源性能列表</h3>
+    <table border="1" cellpadding='10' cellspacing='0'>
+      <thead>
+        <tr>
+          <th>请求页面</th>
+          <th>请求地址</th>
+          <th>请求方式</th>
+          <th>请求时间</th>
+          <th>请求参数</th>
+          <th>返回状态</th>
+          <th>http协议</th>
+          <th>资源类型</th>
+          <th>资源大小</th>
+          <th>耗时</th>
+        </tr>
+      </thead>
+      <tbody id="source_table"></tbody>
+    </table>
+
+    <hr>
+
+    <h3>错误资源列表</h3>
+
+    <h4>执行错误</h4>
+    <table border="1" cellpadding='10' cellspacing='0'>
+      <thead>
+        <tr>
+          <th>源</th>
+          <th>错误行</th>
+          <th>错误列</th>
+          <th>错误类型</th>
+          <th>错误信息</th>
+          <th>时间</th>
+        </tr>
+      </thead>
+      <tbody id="code_error_table"></tbody>
+    </table>
+
+    <h4>资源错误</h4>
+    <table border="1" cellpadding='10' cellspacing='0'>
+      <thead>
+        <tr>
+          <th>源</th>
+          <th>资源类型</th>
+          <th>错误类型</th>
+          <th>错误信息</th>
+          <th>时间</th>
+        </tr>
+      </thead>
+      <tbody id="source_error_table"></tbody>
+    </table>
+
+    <h4>请求错误</h4>
+    <table border="1" cellpadding='10' cellspacing='0'>
+      <thead>
+        <tr>
+          <th>源</th>
+          <th>状态</th>
+          <th>请求类型</th>
+          <th>错误类型</th>
+          <th>错误信息</th>
+          <th>时间</th>
+        </tr>
+      </thead>
+      <tbody id="request_error_table"></tbody>
+    </table>
+
+  </div>
+
+  <hr>
+
+
+  <h3>tips:已知bug</h3>
+  <p>fetch 失败未进入错误列表</p>
+  <p>ajax 请求回调类型错误,全是GET</p>
+  <p>ajax 混用失效</p>
+
+  <button onclick="test()">测试代码执行错误</button>
+  <button onclick="test2()">测试资源加载错误</button>
+  <button onclick="test3()">测试fetch错误</button>
+  <button onclick="test5()">测试axios错误</button>
+  <button onclick="test4()">测试ajax错误</button>
+  <button onclick="test4(true)">测试ajax成功</button>
+
+  <img src="http://pic.9ht.com/up/2018-4/2018041015573052273.jpg" width='0' alt="">
+  <img src="http://pic.9ht.com/up/2018-4/2018041015573052277.jpg" width='0' alt="">
+
+
+</body>
+<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/axios/0.19.0-beta.1/axios.min.js"></script>
+
+<script src="./javascripts/test.js"></script>
+
+
+
+</html>
