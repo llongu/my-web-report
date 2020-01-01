@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <!-- <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script> -->
+  <script src="https://cdn.staticfile.org/axios/0.19.0/axios.min.js"></script>
   <script>
     const observer = new PerformanceObserver(list => {
       for (const entry of list.getEntries()) {
@@ -30,7 +32,7 @@
       entryTypes: ['paint', 'longtask']
     });
   </script>
-  <script src="./javascripts/web-report-default.js"></script>
+  <script src="./javascripts/web-report-axios.js"></script>
   <script>
     Performance({
       domain: './api/webreport', //Your API address
@@ -338,25 +340,18 @@
   <hr>
 
 
-  <h3>tips:已知bug</h3>
-  <p>fetch 失败未进入错误列表</p>
-  <p>ajax 请求回调类型错误,全是GET</p>
-  <p>ajax 混用失效</p>
-
   <button onclick="test()">测试代码执行错误</button>
   <button onclick="test2()">测试资源加载错误</button>
-  <button onclick="test3()">测试fetch错误</button>
-  <button onclick="test5()">测试axios错误</button>
-  <button onclick="test4()">测试ajax错误</button>
-  <button onclick="test4(true)">测试ajax成功</button>
+  <button onclick="test3()">导入fetch sdk测试fetch错误</button>
+  <button onclick="test5()">导入axios sdk测试axios错误</button>
+  <button onclick="test4()">导入ajax sdk测试ajax错误</button>
 
   <img src="http://pic.9ht.com/up/2018-4/2018041015573052273.jpg" width='0' alt="">
   <img src="http://pic.9ht.com/up/2018-4/2018041015573052277.jpg" width='0' alt="">
 
 
 </body>
-<script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
-<script src="https://cdn.staticfile.org/axios/0.19.0-beta.1/axios.min.js"></script>
+
 
 <script src="./javascripts/test.js"></script>
 

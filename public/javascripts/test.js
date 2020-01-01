@@ -1,12 +1,13 @@
 
-function test () {
+function test() {
   if (a) { }
 }
-function test2 () {
-  new Image().src = 'http://pic.9ht.com/up/2018-4/2018041015573052273211.jpg'
+function test2() {
+  const img = new Image().src = 'http://pic.9ht.com/up/2018-4/2018041015573052273211.jpg'
+  document.body.appendChild(img)
 }
 
-function test3 () {
+function test3() {
   fetch('./api/test3', {
     body: JSON.stringify({ test: 123 }), // must match 'Content-Type' header
     headers: {
@@ -17,25 +18,20 @@ function test3 () {
   })
 }
 
-function test4 (a) {
-  let url = './api/test4'
-  if (a) {
-    url = './json'
-  }
-
+function test4() {
   $.ajax({
-    url,
-    method: 'POST',
-    data: {
-      test: 123
+    url: './api/test4',
+    data: JSON.stringify({ test: 123 }), // must match 'Content-Type' header
+    headers: {
+      'content-type': 'application/json'
     },
-    success (e) {
-
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    success: () => {
     }
   })
 }
 
-function test5 () {
+function test5() {
   axios.post('./api/test5', {
     test: 123,
   })
